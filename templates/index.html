@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% if current_user %}
+    <div class="todo-container">
+        <h2>My Todos</h2>
+        <form id="todo-form" class="todo-form">
+            <input type="text" id="todo-title" placeholder="Todo title" required>
+            <textarea id="todo-description" placeholder="Description (optional)"></textarea>
+            <button type="submit">Add Todo</button>
+        </form>
+        <div id="todos-list" class="todos-list">
+            {% for todo in todos %}
+            <div class="todo-item" data-id="{{ todo.id }}">
+                <div class="todo-header">
+                    <input type="checkbox" class="todo-checkbox" {% if todo.completed %}checked{% endif %} data-id="{{ todo.id }}">
+                    <h3 class="todo-title {% if todo.completed %}completed{% endif %}">{{ todo.title }}</h3>
+                    <button class="delete-btn" data-id="{{ todo.id }}">Delete</button>
+                </div>
+                {% if todo.description %}
+                <p class="todo-description {% if todo.completed %}completed{% endif %}">{{ todo.description }}</p>
+                {% endif %}
+                <small class="todo-date">{{ todo.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+{% else %}
+    <div class="welcome-container">
+        <h2>Welcome to Todo App</h2>
+        <p>Please <a href="/login">login</a> or <a href="/signup">sign up</a> to manage your todos.</p>
+    </div>
+{% endif %}
+<script src="/static/js/app.js"></script>
+{% endblock %}
+
