@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  todo-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: todo-app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - SQLALCHEMY_DATABASE_URL=sqlite:///./data/todo_app.db
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key-123456-change-in-production}
+    volumes:
+      # Mount data directory to persist database
+      - ./data:/app/data
+      # Optional: Mount app directory for development hot-reload
+      # Uncomment the line below for hot-reload during development
+      # - ./app:/app/app
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/docs', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: nginx reverse proxy for production
+  # Uncomment below for production deployment with nginx
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: todo-nginx
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
+  #   depends_on:
+  #     - todo-app
+  #   restart: unless-stopped
+

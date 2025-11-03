@@ -1,8 +1,8 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-
-SQLALCHEMY_DATABASE_URL = "sqlite:///./todo_app.db"
+import os
+from app.config import SQLALCHEMY_DATABASE_URL
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
@@ -21,5 +21,8 @@ def get_db():
 
 
 def init_db():
+    # Ensure data directory exists for production deployments
+    if "/data/" in SQLALCHEMY_DATABASE_URL:
+        os.makedirs("data", exist_ok=True)
     Base.metadata.create_all(bind=engine)
 

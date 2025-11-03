@@ -1,0 +1,71 @@
+# Production Dockerfile for Azure Kubernetes Service
+# Optimized for scalability and production workloads
+
+# Stage 1: Builder stage for dependencies
+FROM python:3.11-slim as builder
+
+WORKDIR /app
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    python3-dev \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements file
+COPY requirements-prod.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir --user -r requirements-prod.txt
+
+# Stage 2: Production stage
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install runtime dependencies including PostgreSQL client
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy Python dependencies from builder stage
+COPY --from=builder /root/.local /root/.local
+
+# Make sure scripts in .local are usable
+ENV PATH=/root/.local/bin:$PATH
+
+# Create a non-root user for security
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+
+# Copy application code
+COPY --chown=appuser:appuser app/ ./app/
+COPY --chown=appuser:appuser templates/ ./templates/
+COPY --chown=appuser:appuser static/ ./static/
+
+# Health check script
+COPY --chown=appuser:appuser healthcheck.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/healthcheck.sh
+
+# Create directory for temporary data with proper permissions
+RUN mkdir -p /app/tmp && chown -R appuser:appuser /app/tmp
+
+# Switch to non-root user
+USER appuser
+
+# Expose the port the app runs on
+EXPOSE 8000
+
+# Set environment variables
+ENV PYTHONPATH=/app \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+# Health check for Kubernetes liveness and readiness probes
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+    CMD /usr/local/bin/healthcheck.sh
+
+# Run the application with production settings
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4", "--log-config", "log_config.json"]
+

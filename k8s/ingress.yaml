@@ -1,0 +1,35 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: todo-app-ingress
+  annotations:
+    # Azure-specific annotations
+    kubernetes.io/ingress.class: addon-http-application-routing
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    # Load balancing
+    nginx.ingress.kubernetes.io/load-balance: "round_robin"
+    # CORS configuration
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    # Rate limiting
+    nginx.ingress.kubernetes.io/limit-rps: "100"
+spec:
+  tls:
+  - hosts:
+    - todo-app.yourdomain.com
+    secretName: todo-app-tls-secret
+  rules:
+  - host: todo-app.yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: todo-app-service
+            port:
+              number: 80
+

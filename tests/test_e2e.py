@@ -2,8 +2,8 @@ import pytest
 from playwright.sync_api import Page, expect
 
 
-@pytest.fixture(scope="module")
-def base_url():
+@pytest.fixture(scope="session")
+def base_app_url():
     return "http://127.0.0.1:8000"
 
 

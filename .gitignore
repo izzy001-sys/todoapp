@@ -25,6 +25,11 @@ build/
 # Environment
 .env
 .env.local
+.env.production
+.env.*.local
+# Keep env.example as template
+!.env.example
+!env.example
 
 # Testing
 .pytest_cache/
