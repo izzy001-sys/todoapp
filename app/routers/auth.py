@@ -81,7 +81,7 @@ async def login_page(request: Request, db: Session = Depends(get_db)):
 
 @router.get("/logout")
 async def logout():
-    response = RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
+    response = RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
     response.delete_cookie(key="access_token")
     return response
 
