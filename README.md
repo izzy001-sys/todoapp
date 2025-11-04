@@ -14,7 +14,7 @@ A full-stack todo application built with FastAPI, SQLAlchemy, and vanilla JavaSc
 ## Project Structure
 
 ```
-appexample03/
+todoapp/
 ├── app/
 │   ├── __init__.py
 │   ├── main.py              # FastAPI application entry point
