@@ -16,9 +16,26 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 
 class NoRedirectClient(TestClient):
     # Make sure tests see 303 instead of following to 200
+    def __init__(self, app, base_url="http://testserver", **kwargs):
+        # Remove follow_redirects from kwargs to avoid TypeError
+        kwargs.pop("follow_redirects", None)
+        super().__init__(app, base_url=base_url, **kwargs)
+    
     def request(self, *args, **kwargs):
-        kwargs.setdefault("allow_redirects", False)
+        kwargs.pop("follow_redirects", None)
+        kwargs["follow_redirects"] = False
         return super().request(*args, **kwargs)
+    
+    # Explicitly override HTTP methods to ensure follow_redirects is False
+    def get(self, url, **kwargs):
+        kwargs.pop("follow_redirects", None)
+        kwargs["follow_redirects"] = False
+        return super().get(url, **kwargs)
+    
+    def post(self, url, **kwargs):
+        kwargs.pop("follow_redirects", None)
+        kwargs["follow_redirects"] = False
+        return super().post(url, **kwargs)
 
 @pytest.fixture(scope="function")
 def db_session():

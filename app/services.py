@@ -47,7 +47,7 @@ def get_user_by_id(db: Session, user_id: int) -> models.User:
 
 
 def create_todo(db: Session, todo: schemas.TodoCreate, owner_id: int) -> models.Todo:
-    db_todo = models.Todo(**todo.dict(), owner_id=owner_id)
+    db_todo = models.Todo(**todo.model_dump(), owner_id=owner_id)
     db.add(db_todo)
     db.commit()
     db.refresh(db_todo)
@@ -75,7 +75,7 @@ def get_todo_by_id(db: Session, todo_id: int, owner_id: int) -> models.Todo:
 
 def update_todo(db: Session, todo_id: int, todo_update: schemas.TodoUpdate, owner_id: int) -> models.Todo:
     todo = get_todo_by_id(db, todo_id, owner_id)
-    update_data = todo_update.dict(exclude_unset=True)
+    update_data = todo_update.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(todo, field, value)
     db.commit()

@@ -1,16 +1,29 @@
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
 import os
-from app.config import SQLALCHEMY_DATABASE_URL
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
+
+Base = declarative_base()
+
+APP_ENV = os.getenv("APP_ENV", "dev")
+
+if APP_ENV == "test":
+    DB_FILE = "test_e2e.db"
+    # start each e2e session clean
+    try:
+        os.remove(DB_FILE)
+    except FileNotFoundError:
+        pass
+    SQLALCHEMY_DATABASE_URL = f"sqlite:///./{DB_FILE}"
+else:
+    SQLALCHEMY_DATABASE_URL = "sqlite:///./todo_app.db"
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-Base = declarative_base()
-
+def init_db():
+    Base.metadata.create_all(bind=engine)
 
 def get_db():
     db = SessionLocal()
@@ -18,11 +31,3 @@ def get_db():
         yield db
     finally:
         db.close()
-
-
-def init_db():
-    # Ensure data directory exists for production deployments
-    if "/data/" in SQLALCHEMY_DATABASE_URL:
-        os.makedirs("data", exist_ok=True)
-    Base.metadata.create_all(bind=engine)
-
